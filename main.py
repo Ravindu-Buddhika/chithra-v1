@@ -1,26 +1,40 @@
 from voice import speak
 from brain import get_ai_response
+from processor import check_local_intent 
+import pyautogui
+import time
 
 def main():
     print("--- CHITHRA AI INITIALIZED ---")
-    speak("Hello Sir, I am online. How can I help you?")
+    speak("Hello Sir, how can I help you?")
 
     while True:
-        # User ගෙන් input එකක් ගන්නවා
         user_input = input("\nYou: ").strip()
+        if not user_input: continue
+        
+        if user_input.lower() in ["exit", "bye"]: break
 
-        # අයින් වෙන්න ඕනේ නම්
-        if user_input.lower() in ["exit", "bye", "stop"]:
-            speak("Goodbye Sir! Turning off systems.")
-            break
+        intent, target = check_local_intent(user_input)
 
-        if user_input:
-            print("Thinking...")
-            # Gemini ගෙන් උත්තරය ඉල්ලනවා
+        if intent == "OS_OPEN_APP":
+            speak(f"Sure, opening {target}")
+            pyautogui.press('win')
+            time.sleep(0.5)
+            pyautogui.write(target)
+            time.sleep(0.5)
+            pyautogui.press('enter')
+
+        else:
+            print("Thinking (Gemini)...")
             ai_reply = get_ai_response(user_input)
+            
+            if "[OPEN:" in ai_reply:
+                app_name = ai_reply.split("[OPEN:")[1].split("]")[0].strip()
+                pyautogui.press('win')
+                pyautogui.write(app_name)
+                pyautogui.press('enter')
 
-            clean_reply = ai_reply.replace("*", "").replace("#", "")
-    
+            clean_reply = ai_reply.split("[")[0].strip()
             speak(clean_reply)
 
 if __name__ == "__main__":
